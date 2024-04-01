@@ -6,6 +6,7 @@ void main() {
   runApp(const MyApp());
 }
 
+// Essa classe é o widget raiz do aplicativo.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
@@ -38,6 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String moedaSelecionadaDestino = '';
   final _amountController = TextEditingController();
 
+  /*Aqui Inicializa o estado do widget.*/
   @override
   void initState() {
     super.initState();
@@ -45,8 +47,15 @@ class _MyHomePageState extends State<MyHomePage> {
     fetchData();
   }
 
+  /*
+  Esse método realiza faz a chamada para a API  responsável por fazer a conversão e guarda o resultado*/
+
   Future <void> fetchData() async {
-    String amount =_amountController.text.isNotEmpty ? _amountController.text : '1';
+    if (moedaSelecionadaBase.isEmpty || moedaSelecionadaDestino.isEmpty) {
+      return;
+    }
+
+    String amount = _amountController.text.isNotEmpty ? _amountController.text : '1';
     final response = await http.get(Uri.parse('https://api.frankfurter.app/latest?amount=$amount&from=$moedaSelecionadaBase&to=$moedaSelecionadaDestino'));
 
     if (response.statusCode == 200) {
@@ -56,16 +65,19 @@ class _MyHomePageState extends State<MyHomePage> {
         dataRetorno = jsonData['date'];
       });
     } else {
-      print('Erro ao carregar dados: ${response.statusCode} ${response.request.toString()}');
+      print(
+          'Erro ao carregar dados: ${response.statusCode} ${response.request.toString()}');
     }
   }
 
+  /*Esse método retorna as moedas possíveis de serem convertidas e definem o valor inicial das variáveis
+  moedaSelecionadaBase e moedaSelecionadaDestino*/ 
+
   Future <void> fetchCurrencies() async {
-    final response =
-        await http.get(Uri.parse('https://api.frankfurter.app/currencies'));
+    final response = await http.get(Uri.parse('https://api.frankfurter.app/currencies'));
 
     if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body) as Map <String, dynamic>;
+      final jsonData = json.decode(response.body) as Map<String, dynamic>;
       setState(() {
         _currencies = jsonData.map((key, value) => MapEntry(key, value.toString()));
         moedaSelecionadaBase = _currencies.keys.first;
@@ -76,6 +88,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  /*Esse método constrói e estiliza a tela principal do aplicativo.
+  Ele mostra um campo para digitar a quantidade a ser convertida, opções para escolher as moedas, e mostra o resultado da conversão.*/
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,6 +105,10 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(
               width: 300.0,
               child: TextField(
+                onChanged: (newValue) {
+                setState(() {
+                  fetchData();
+                });},
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
@@ -98,20 +116,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(.0),
                   ),
-                  filled: true, 
-                  fillColor:  const Color.fromARGB(255, 215, 209, 219),
+                  filled: true,
+                  fillColor: const Color.fromARGB(255, 215, 209, 219),
                 ),
               ),
             ),
-            const SizedBox(
-                height: 30),
+            const SizedBox(height: 30),
             const Text(
               'Selecione uma moeda de origem:',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            DropdownButton<String>(
+            DropdownButton <String>(
               value: moedaSelecionadaBase,
               onChanged: (newValue) {
                 setState(() {
@@ -155,7 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            DropdownButton<String>(
+            DropdownButton <String>(
               value: moedaSelecionadaDestino,
               onChanged: (newValue) {
                 setState(() {
@@ -182,7 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   color: Color.fromARGB(255, 158, 158, 158),
                 ),
               ),
-              dropdownColor:  const Color.fromARGB(255, 255, 255, 255),
+              dropdownColor: const Color.fromARGB(255, 255, 255, 255),
               icon: const Icon(
                 // Ícone do dropdown
                 Icons.currency_exchange,
@@ -198,11 +215,9 @@ class _MyHomePageState extends State<MyHomePage> {
             Visibility(
               visible: _apiData != 0 && dataRetorno.isNotEmpty,
               child: Container(
-                padding:
-                    const EdgeInsets.all(10),
-                margin: const EdgeInsets.only(
-                    top: 10),
-                color:  const Color.fromARGB(255, 238, 238, 238),
+                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.only(top: 10),
+                color: const Color.fromARGB(255, 238, 238, 238),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
